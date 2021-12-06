@@ -1,0 +1,118 @@
+<template>
+  <div></div>
+</template>
+
+
+<script>
+  import * as THREE from "three";
+  import {
+    GLTFLoader
+  } from "three/examples/jsm/loaders/GLTFLoader";
+  import {
+    OrbitControls
+  } from 'three/examples/jsm/controls/OrbitControls'
+  export default {
+    name: 'HelloWorld',
+    data() {
+      return {
+        scene: null,
+        camera: null,
+        renderer: null,
+        animatePlay: null,
+        light: null
+      }
+
+    },
+    computed: {
+
+    },
+    methods: {
+      onWindowRize(){
+        this.camera.aspect=window.innerWidth / window.innerHeight
+        this.camera.updateProjectionMatrix()
+        this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+
+      },
+      init() {
+        this.scene = new THREE.Scene(); //创建一个场景
+        //创建透视相机 第一个属性是视野角度,第二个是长宽比,第三个是远剪切面,和近剪切面
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        //创建渲染器
+        this.renderer = new THREE.WebGLRenderer();
+        //设置渲染器尺寸
+        this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+        //将渲染器添加到我们的html文档中
+        document.body.appendChild(this.renderer.domElement);
+
+        this.light = new THREE.AmbientLight(0xffffff, 1);
+        this.light.position.set(0, 1, 1);
+        this.scene.add(this.light);
+
+        //场景创建完毕
+
+        // //new一个立方体对象
+        // let geometry = new THREE.BoxGeometry(1, 1, 1);
+        // // 创建使用MeshBasicMaterial材质并添加属性,
+        // let material = new THREE.MeshBasicMaterial({
+        //   color: 0x09ff,
+        // });
+
+        // //创建一个网格, 把立方体对象和材质添加到网格中
+        // let cube = new THREE.Mesh(geometry, material);
+        // this.scene.add(cube); //把网格添加到场景中,位置默认在(0,0,0)的坐标
+
+        //地板
+        {
+          const planeSize = 40;
+          const loader = new THREE.TextureLoader();
+          const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/checker.png');
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.magFilter = THREE.NearestFilter;
+          const repeats = planeSize / 2;
+          texture.repeat.set(repeats, repeats);
+          const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+          const planeMat = new THREE.MeshPhongMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+          });
+          const mesh = new THREE.Mesh(planeGeo, planeMat);
+          mesh.rotation.x = Math.PI * -.5;
+          this.scene.add(mesh);
+        }
+
+        //为了防止重叠把摄像机向外移动一些
+        this.camera.position.set(0, 5, -5);
+        new OrbitControls(this.camera, this.renderer.domElement)
+
+        const gltfLoader = new GLTFLoader();
+        const url = '/girl/scene.gltf';
+        gltfLoader.load(url, (gltf) => {
+          const root = gltf.scene;
+          this.scene.add(root);
+        });
+
+
+        let animatePlay = () => {
+          requestAnimationFrame(animatePlay);
+          // cube.rotation.x += 0.01;
+          // cube.rotation.y += 0.01;
+          this.renderer.render(this.scene, this.camera);
+        }
+        animatePlay()
+      },
+
+    },
+    mounted() {
+      this.init()
+      window.addEventListener('resize',this.onWindowRize)
+    },
+  }
+</script>
+
+<style scoped>
+  #app {
+    width: 100%;
+    height: 100vh;
+  }
+</style>
